@@ -1,26 +1,31 @@
 #ifndef __EVENT_H__
 #define __EVENT_H__
 
+enum {
+	CREATE_EVENT, WRITE_EVENT, SYMLINK_EVENT, LINK_EVENT,
+	UNLINK_EVENT, MKDIR_EVENT, RMDIR_EVENT, MKNOD_EVENT,
+	RENAME_EVENT
+};
+
 struct event {
 	struct list_head list;
-
-	enum {
-		CREATE_EVENT,
-		WRITE_EVENT,
-		SYMLINK_EVENT,
-		LINK_EVENT,
-		UNLINK_EVENT,
-		MKDIR_EVENT,
-		RMDIR_EVENT,
-		MKNOD_EVENT,
-		RENAME_EVENT
-	} e_type;
 
 	char path_1[PATH_MAX];
 	char path_2[PATH_MAX];
 
+	/* event type */
+	int e_type;
+
+	/* payload data */
 	void *data;
 	int data_size;
+
+	/* permissions */
+	uid_t uid;
+	gid_t gid;
+	int mode;
+
+	/* actual time */
 	time_t time_stamp;
 };
 

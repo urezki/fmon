@@ -9,22 +9,23 @@
 #include <main.h>
 
 static int
-fmon_create(struct inode *inode, struct dentry *dentry, int foo, struct nameidata *namei)
+fmon_create(struct inode *inode, struct dentry *dentry, int mode,
+			struct nameidata *namei)
 {
-	struct event *e = NULL;
+	struct event *event = NULL;
 	int retval = -1;
 	char *path;
 	
 	if (fmon->linux_create) {
-		retval = fmon->linux_create(inode, dentry, foo, namei);
+		retval = fmon->linux_create(inode, dentry, mode, namei);
 		if (!retval) {
 			path = dentry_full_path(dentry);
 			if (path) {
-				e = create_event(CREATE_EVENT);
-				strncpy(e->path_1, path, PATH_MAX);
-				list_add(&e->list, &fmon->event_list);
-
-				printk(KERN_ERR "create [%d] --> %s\n", current->pid, path);
+				event = create_event(CREATE_EVENT);
+				strncpy(event->path_1, path, PATH_MAX);
+				event->mode = mode;
+				list_add(&event->list, &fmon->event_list);
+				printk(KERN_ERR "create [%d] --> %s mode: %d\n", current->pid, path, mode);
 				kfree(path);
 			}
 		}
@@ -34,7 +35,8 @@ fmon_create(struct inode *inode, struct dentry *dentry, int foo, struct nameidat
 }
 
 static struct dentry *
-fmon_lookup(struct inode *inode, struct dentry *dentry, struct nameidata *namei)
+fmon_lookup(struct inode *inode, struct dentry *dentry,
+			struct nameidata *namei)
 {
 	struct dentry *d = NULL;
 
@@ -140,9 +142,10 @@ fmon_mkdir(struct inode *i, struct dentry *d, int mode)
 			if (path) {
 				e = create_event(MKDIR_EVENT);
 				strncpy(e->path_1, path, PATH_MAX);
+				e->mode = mode;
 				list_add(&e->list, &fmon->event_list);
 
-				printk(KERN_ERR "mkdir [%d] --> %s\n", current->pid, path);
+				printk(KERN_ERR "mkdir [%d] --> %s mode: %d\n", current->pid, path, mode);
 				kfree(path);
 			}
 		}
@@ -179,10 +182,24 @@ fmon_rmdir(struct inode *i, struct dentry *d)
 static int
 fmon_mknod(struct inode *i, struct dentry *d, int mode, dev_t dev)
 {
+	struct event *event;
 	int retval = -1;
+	char *path;
 
-	if (fmon->linux_mknod)
+	if (fmon->linux_mknod) {
 		retval = fmon->linux_mknod(i, d, mode, dev);
+		if (!retval) {
+			path = dentry_full_path(d);
+			if (path) {
+				event = create_event(MKNOD_EVENT);
+				strncpy(event->path_1, path, PATH_MAX);
+				event->mode = mode;
+				list_add(&event->list, &fmon->event_list);
+
+				printk(KERN_ERR "mknod [%d] --> %s\n", current->pid, path);
+			}
+		}
+	}
 	
 	return retval;
 }
@@ -271,7 +288,7 @@ fmon_setattr(struct dentry *d, struct iattr *attr)
 
 	if (fmon->linux_setattr)
 		retval = fmon->linux_setattr(d, attr);
-	
+
 	return retval;
 }
 
