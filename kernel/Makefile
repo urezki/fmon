@@ -2,22 +2,23 @@
 # KBUILD build parameters.
 #
 
-MODULE_NAME := inode
-SOURCE_OBJS := dentry.o
-EXTRA_CFLAGS += -Wall -ggdb -D__KERNEL__ -DMODULE -DLINUX
+MODULE_NAME = fmon
+SOURCE_OBJS = src/dentry.o src/inode.o src/main.o src/vfs.o src/device.o
+SOURCE_HDRS	= include/dentry.h include/inode.h include/main.h include/vfs.h \
+	include/device.h
 
-ifneq ($(KERNELRELEASE),)
-		obj-m := $(MODULE_NAME).o 
-		$(MODULE_NAME)-objs := $(SOURCE_OBJS)
-else
-		KDIR	= /lib/modules/`uname -r`/build
-		PWD	= $(shell pwd)
+EXTRA_CFLAGS = -Wall -g -D__KERNEL__ -DMODULE -DLINUX -I$(src)/include
+
+KDIR	= /lib/modules/`uname -r`/build
+PWD		= $(shell pwd)
+
+obj-m = $(MODULE_NAME).o
+$(MODULE_NAME)-objs = $(SOURCE_OBJS)
+$(MODULE_NAME)-hdrs = $(SOURCE_HDRS)
 
 default:
 		$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
 
 clean:
-		-rm -f $(SOURCE_OBJS)
-		-rm -f $(MODULE_NAME).mod.*
-		-rm -f $(MODULE_NAME).{o,ko}
-endif
+		-rm -rf $(SOURCE_OBJS) $(MODULE_NAME).{o,ko,mod.*} .depend .*.cmd *.ko *.mod.c \
+		.tmp_versions modules.order Module.symvers src/.*.cmd

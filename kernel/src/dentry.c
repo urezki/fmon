@@ -1,9 +1,10 @@
-#include <linux/kernel.h>
-#include <linux/module.h>
 #include <linux/fs.h>
 #include <linux/sched.h>
 #include <linux/mount.h>
 #include <linux/string.h>
+
+/* local headers */
+#include <dentry.h>
 
 struct vfsmount *
 dentry_to_vfs(struct dentry *de)
@@ -13,15 +14,15 @@ dentry_to_vfs(struct dentry *de)
 	struct dentry		*tmp		   = NULL;
 	struct list_head	*vfsmount_list = NULL;
 	struct fs_struct	*f			   = NULL;
-	
+
 	for (tmp = de; tmp->d_parent != tmp; tmp = tmp->d_parent)
 		;
 
 	f = init_task.fs;
 
-	read_lock(f->lock);
+	read_lock(&f->lock);
 	rootmnt = mntget(f->root.mnt);
-	read_unlock(f->lock);
+	read_unlock(&f->lock);
 
 	list_for_each(vfsmount_list, &rootmnt->mnt_list) {
 		struct vfsmount *droot = list_entry(vfsmount_list, struct vfsmount, mnt_list);
@@ -54,9 +55,9 @@ dentry_full_path(struct dentry *d)
 		full_path_name = kmalloc(sizeof(char) * PATH_MAX, GFP_KERNEL);
 		memset(full_path_name, 0, PATH_MAX);
 		
-		read_lock(f->lock);
+		read_lock(&f->lock);
 		rootmnt = mntget(f->root.mnt);
-		read_unlock(f->lock);
+		read_unlock(&f->lock);
 
 		end = full_path_name + (PATH_MAX - 1);
 		*end = '\0';
@@ -88,6 +89,3 @@ dentry_full_path(struct dentry *d)
 out:
 	return NULL;
 }
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Uladzislau Rezki");
