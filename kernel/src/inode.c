@@ -22,8 +22,12 @@ fmon_create(struct inode *inode, struct dentry *dentry, int mode,
 			path = dentry_full_path(dentry);
 			if (path) {
 				event = create_event(CREATE_EVENT);
+
 				strncpy(event->path_1, path, PATH_MAX);
+				event->uid = inode->i_uid;
+				event->gid = inode->i_gid;
 				event->mode = mode;
+
 				list_add(&event->list, &fmon->event_list);
 				printk(KERN_ERR "create [%d] --> %s mode: %d\n", current->pid, path, mode);
 				kfree(path);
@@ -131,7 +135,7 @@ fmon_symlink(struct inode *i, struct dentry *d, const char *name)
 static int
 fmon_mkdir(struct inode *i, struct dentry *d, int mode)
 {
-	struct event *e;
+	struct event *event;
 	int retval = -1;
 	char *path;
 	
@@ -140,10 +144,14 @@ fmon_mkdir(struct inode *i, struct dentry *d, int mode)
 		if (!retval) {
 			path = dentry_full_path(d);
 			if (path) {
-				e = create_event(MKDIR_EVENT);
-				strncpy(e->path_1, path, PATH_MAX);
-				e->mode = mode;
-				list_add(&e->list, &fmon->event_list);
+				event = create_event(MKDIR_EVENT);
+
+				strncpy(event->path_1, path, PATH_MAX);
+				event->uid = i->i_uid;
+				event->gid = i->i_gid;
+				event->mode = mode;
+
+				list_add(&event->list, &fmon->event_list);
 
 				printk(KERN_ERR "mkdir [%d] --> %s mode: %d\n", current->pid, path, mode);
 				kfree(path);
