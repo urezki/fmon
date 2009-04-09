@@ -6,6 +6,10 @@
 /* local headers */
 #include <dentry.h>
 
+/*
+ * This routine is looking for vfsmount structure
+ * that contains a dentry that is in question.
+ */
 struct vfsmount *
 dentry_to_vfs(struct dentry *de)
 {
@@ -15,6 +19,7 @@ dentry_to_vfs(struct dentry *de)
 	struct list_head	*vfsmount_list = NULL;
 	struct fs_struct	*f			   = NULL;
 
+	/* find root dentry of the mounted tree */
 	for (tmp = de; tmp->d_parent != tmp; tmp = tmp->d_parent)
 		;
 
@@ -26,7 +31,7 @@ dentry_to_vfs(struct dentry *de)
 
 	list_for_each(vfsmount_list, &rootmnt->mnt_list) {
 		struct vfsmount *droot = list_entry(vfsmount_list, struct vfsmount, mnt_list);
-		if (tmp == droot->mnt_root) {
+		if (droot->mnt_root == tmp) {
 			dmnt = mntget(droot);
 			break;
 		}
@@ -36,6 +41,10 @@ dentry_to_vfs(struct dentry *de)
 	return dmnt ? dmnt:mntget(rootmnt);
 }
 
+/*
+ * Goes through the dcache and builds absolute
+ * path to the dentry that is in question.
+ */
 char *
 dentry_full_path(struct dentry *d)
 {
