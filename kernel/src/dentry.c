@@ -2,6 +2,7 @@
 #include <linux/sched.h>
 #include <linux/mount.h>
 #include <linux/string.h>
+#include <linux/version.h>
 
 /* local headers */
 #include <dentry.h>
@@ -54,16 +55,25 @@ dentry_full_path(struct dentry *d)
 	if (d == NULL)
 		goto out;
 	
+	/* PATH_MAX is 4096 including nul */
+	full_path_name = kmalloc(sizeof(char) * PATH_MAX, GFP_KERNEL);
+	memset(full_path_name, 0, PATH_MAX);
+
 	d_mnt = dentry_to_vfs(d);
 	if (d_mnt) {
 		struct vfsmount *rootmnt;
 		struct fs_struct *f = init_task.fs;
 		char *end;
-		
-		/* PATH_MAX is 4096 including nul */
-		full_path_name = kmalloc(sizeof(char) * PATH_MAX, GFP_KERNEL);
-		memset(full_path_name, 0, PATH_MAX);
-		
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25)
+		{
+			struct path p = { .mnt = d_mnt, .dentry = d };
+			char buf[PATH_MAX] = {'\0'};
+			char *path;
+
+			path = d_path(&p, buf, PATH_MAX);
+			return strncpy(full_path_name, path, PATH_MAX);
+		}
+#endif
 		read_lock(&f->lock);
 		rootmnt = mntget(f->root.mnt);
 		read_unlock(&f->lock);
@@ -78,7 +88,7 @@ dentry_full_path(struct dentry *d)
 		while (1) {
 			if (IS_ROOT(d)) {
 				if (d_mnt == rootmnt)
-					break;		/* root... give up */
+					break;		/* global root, give up */
 				
 				d = d_mnt->mnt_mountpoint;
 				d_mnt = d_mnt->mnt_parent;
