@@ -40,7 +40,7 @@ static void __exit
 fmon_exit(void)
 {
 	unregister_fmon_dev();
-	reset_inode_op(fmon);
+	restore_inode_op(fmon);
 	kfree(fmon);
 }
 

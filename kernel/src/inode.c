@@ -444,7 +444,7 @@ fail:
 
 
 int
-reset_inode_op(struct file_monitor *f)
+restore_inode_op(struct file_monitor *f)
 {
 	struct inode_operations *iop = NULL;
 	struct inode *i = NULL;
@@ -455,7 +455,7 @@ reset_inode_op(struct file_monitor *f)
 	i = f->sb->s_root->d_inode;
 	iop = (struct inode_operations *) i->i_op;
 
-	/* replace ... */
+	/* restore */
 	iop->create = f->linux_create;
 	iop->unlink = f->linux_unlink;
 	iop->lookup = f->linux_lookup;
