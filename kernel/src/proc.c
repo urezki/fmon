@@ -5,6 +5,7 @@
 /* locals */
 #include <proc.h>
 #include <inode.h>
+#include <main.h>
 
 static struct proc_dir_entry *root_folder;
 
@@ -40,6 +41,21 @@ state_write(struct file *filp, const char __user *buff, unsigned long count,
 	return -EINVAL;
 }
 
+static int
+event_queue_len_read(char *page, char **start, off_t off, int count, int *eof,
+					 void *data)
+{
+	return sprintf(page, "%d\n", fmon->event_list_len);
+}
+
+static int
+event_queue_len_write(struct file *filp, const char __user *buff, unsigned long count,
+					  void *data)
+{
+	/* NOTHING */
+	return -EINVAL;
+}
+
 int register_proc_entries(void)
 {
 	struct proc_dir_entry *entry;
@@ -55,6 +71,13 @@ int register_proc_entries(void)
 		entry->owner = THIS_MODULE;
 	}
 
+	entry = create_proc_entry("event_queue_len", 0644, root_folder);
+	if (entry) {
+		entry->read_proc = event_queue_len_read;
+		entry->write_proc = event_queue_len_write;
+		entry->owner = THIS_MODULE;
+	}
+
 	return 0;
 out:
 	return -1;
@@ -63,5 +86,8 @@ out:
 int unregister_proc_entries(void)
 {
 	remove_proc_entry("state", root_folder);
+	remove_proc_entry("event_queue_len", root_folder);
 	remove_proc_entry("fmon", NULL);
+
+	return 0;
 }

@@ -30,6 +30,7 @@ struct file_monitor {
 	long (*linux_fallocate)(struct inode *inode, int mode, loff_t offset, loff_t len);
 
 	struct list_head event_list; /* all events */
+	unsigned int event_list_len;
 };
 
 extern struct file_monitor *fmon;

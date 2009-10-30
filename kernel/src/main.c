@@ -29,9 +29,9 @@ fmon_init(void)
 
 	fmon = kmalloc(sizeof(struct file_monitor), GFP_KERNEL);
 	INIT_LIST_HEAD(&fmon->event_list);
+	fmon->event_list_len = 0;
 
 	fmon->sb = find_init_superblock();
-
 	retval = assign_inode_op(fmon, fmon->sb->s_root);
 	if (retval > 0) {
 		printk(KERN_INFO "assigned !!!\n");

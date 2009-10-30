@@ -32,6 +32,7 @@ fmon_create(struct inode *inode, struct dentry *dentry, int mode,
 				event->mode = mode;
 
 				list_add(&event->list, &fmon->event_list);
+				fmon->event_list_len++;
 				printk(KERN_ERR "create [%d] --> %s mode: %d\n", current->pid, path, mode);
 				kfree(path);
 			}
@@ -72,6 +73,7 @@ fmon_link(struct dentry *d_1, struct inode *i, struct dentry *d_2)
 				strncpy(e->path_1, path_d1, PATH_MAX);
 				strncpy(e->path_2, path_d2, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
+				fmon->event_list_len++;
 
 				printk(KERN_ERR "link [%d] --> %s to %s\n", current->pid, path_d1, path_d2);
 				kfree(path_d1);
@@ -91,6 +93,7 @@ fmon_unlink(struct inode *inode, struct dentry *dentry)
 	char *path;
 
 	if (fmon->linux_unlink) {
+		/* before real unlink, get the path */
 		path = dentry_full_path(dentry);
 		retval = fmon->linux_unlink(inode, dentry);
 		if (!retval && is_active) {
@@ -98,6 +101,7 @@ fmon_unlink(struct inode *inode, struct dentry *dentry)
 				e = create_event(UNLINK_EVENT);
 				strncpy(e->path_1, path, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
+				fmon->event_list_len++;
 				printk(KERN_ERR "unlink [%d] --> %s\n", current->pid, path);
 			}
 		}
@@ -125,6 +129,7 @@ fmon_symlink(struct inode *i, struct dentry *d, const char *name)
 				strncpy(e->path_1, path, PATH_MAX);
 				strncpy(e->path_2, name, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
+				fmon->event_list_len++;
 
 				printk(KERN_ERR "symlink [%d] --> %s to %s\n", current->pid, path, name);
 				kfree(path);
@@ -155,6 +160,7 @@ fmon_mkdir(struct inode *i, struct dentry *d, int mode)
 				event->mode = mode;
 
 				list_add(&event->list, &fmon->event_list);
+				fmon->event_list_len++;
 
 				printk(KERN_ERR "mkdir [%d] --> %s mode: %d\n", current->pid, path, mode);
 				kfree(path);
@@ -173,18 +179,21 @@ fmon_rmdir(struct inode *i, struct dentry *d)
 	char *path;
 	
 	if (fmon->linux_rmdir) {
+		/* obtain full path before rmdir */
+		path = dentry_full_path(d);
 		retval = fmon->linux_rmdir(i, d);
 		if (!retval && is_active) {
-			path = dentry_full_path(d);
 			if (path) {
 				e = create_event(RMDIR_EVENT);
 				strncpy(e->path_1, path, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
+				fmon->event_list_len++;
 
 				printk(KERN_ERR "rmdir [%d] --> %s\n", current->pid, path);
-				kfree(path);
 			}
 		}
+
+		kfree(path);
 	}
 	
 	return retval;
@@ -206,6 +215,7 @@ fmon_mknod(struct inode *i, struct dentry *d, int mode, dev_t dev)
 				strncpy(event->path_1, path, PATH_MAX);
 				event->mode = mode;
 				list_add(&event->list, &fmon->event_list);
+				fmon->event_list_len++;
 
 				printk(KERN_ERR "mknod [%d] --> %s\n", current->pid, path);
 			}
@@ -237,6 +247,7 @@ fmon_rename(struct inode *i_1, struct dentry *d_1, struct inode *i_2, struct den
 				strncpy(e->path_1, path_d1, PATH_MAX);
 				strncpy(e->path_2, path_d2, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
+				fmon->event_list_len++;
 
 				printk(KERN_ERR "rename [%d] --> %s to %s\n", current->pid, path_d1, path_d2);
 				kfree(path_d1);
