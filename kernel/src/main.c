@@ -8,6 +8,7 @@
 #include <inode.h>
 #include <device.h>
 #include <vfs.h>
+#include <proc.h>
 
 /* global stuff */
 struct list_head fmon_list;
@@ -17,6 +18,10 @@ static int __init
 fmon_init(void)
 {
 	int retval;
+
+	retval = register_proc_entries();
+	if (retval < 0)
+		goto out;
 
 	retval = register_fmon_dev();
 	if (retval < 0)
@@ -39,6 +44,7 @@ out:
 static void __exit
 fmon_exit(void)
 {
+	unregister_proc_entries();
 	unregister_fmon_dev();
 	restore_inode_op(fmon);
 	kfree(fmon);

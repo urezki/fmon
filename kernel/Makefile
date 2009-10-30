@@ -3,7 +3,8 @@
 #
 
 MODULE_NAME = fmon
-SOURCE_OBJS = src/dentry.o src/inode.o src/main.o src/vfs.o src/device.o
+
+SOURCE_OBJS = src/dentry.o src/inode.o src/main.o src/vfs.o src/device.o src/proc.o
 SOURCE_HDRS	= include/dentry.h include/inode.h include/main.h include/vfs.h \
 	include/device.h
 

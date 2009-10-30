@@ -1,0 +1,9 @@
+                        ====== fmon ======
+
+This project tries to implement file tracker (monitor), i.e. it tracks
+all operations which are performed with files and push them from kernel
+to user land. In that way it will be a real-time replication system.
+
+Contacts:
+        email: urezki@gmail.com
+        skype: uladzislau_rezki

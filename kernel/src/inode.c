@@ -8,6 +8,9 @@
 #include <event.h>
 #include <main.h>
 
+/* off */
+int is_active = 0;
+
 static int
 fmon_create(struct inode *inode, struct dentry *dentry, int mode,
 			struct nameidata *namei)
@@ -18,7 +21,7 @@ fmon_create(struct inode *inode, struct dentry *dentry, int mode,
 	
 	if (fmon->linux_create) {
 		retval = fmon->linux_create(inode, dentry, mode, namei);
-		if (!retval) {
+		if (!retval && is_active) {
 			path = dentry_full_path(dentry);
 			if (path) {
 				event = create_event(CREATE_EVENT);
@@ -60,7 +63,7 @@ fmon_link(struct dentry *d_1, struct inode *i, struct dentry *d_2)
 	
 	if (fmon->linux_link) {
 		retval = fmon->linux_link(d_1, i, d_2);
-		if (!retval) {
+		if (!retval && is_active) {
 			path_d1 = dentry_full_path(d_1);
 			path_d2 = dentry_full_path(d_2);
 
@@ -86,11 +89,11 @@ fmon_unlink(struct inode *inode, struct dentry *dentry)
 	struct event *e;
 	int retval = -1;
 	char *path;
-	
+
 	if (fmon->linux_unlink) {
 		path = dentry_full_path(dentry);
 		retval = fmon->linux_unlink(inode, dentry);
-		if (!retval) {
+		if (!retval && is_active) {
 			if (path) {
 				e = create_event(UNLINK_EVENT);
 				strncpy(e->path_1, path, PATH_MAX);
@@ -102,7 +105,7 @@ fmon_unlink(struct inode *inode, struct dentry *dentry)
 		if (path)
 			kfree(path);
 	}
-	
+
 	return retval;
 }
 
@@ -112,12 +115,12 @@ fmon_symlink(struct inode *i, struct dentry *d, const char *name)
 	struct event *e;
 	int retval = -1;
 	char *path;
-	
+
 	if (fmon->linux_symlink) {
 		retval = fmon->linux_symlink(i, d, name);
 		if (!retval) {
 			path = dentry_full_path(d);
-			if (path) {
+			if (path && is_active) {
 				e = create_event(SYMLINK_EVENT);
 				strncpy(e->path_1, path, PATH_MAX);
 				strncpy(e->path_2, name, PATH_MAX);
@@ -141,7 +144,7 @@ fmon_mkdir(struct inode *i, struct dentry *d, int mode)
 	
 	if (fmon->linux_mkdir) {
 		retval = fmon->linux_mkdir(i, d, mode);
-		if (!retval) {
+		if (!retval && is_active) {
 			path = dentry_full_path(d);
 			if (path) {
 				event = create_event(MKDIR_EVENT);
@@ -171,7 +174,7 @@ fmon_rmdir(struct inode *i, struct dentry *d)
 	
 	if (fmon->linux_rmdir) {
 		retval = fmon->linux_rmdir(i, d);
-		if (!retval) {
+		if (!retval && is_active) {
 			path = dentry_full_path(d);
 			if (path) {
 				e = create_event(RMDIR_EVENT);
@@ -196,7 +199,7 @@ fmon_mknod(struct inode *i, struct dentry *d, int mode, dev_t dev)
 
 	if (fmon->linux_mknod) {
 		retval = fmon->linux_mknod(i, d, mode, dev);
-		if (!retval) {
+		if (!retval && is_active) {
 			path = dentry_full_path(d);
 			if (path) {
 				event = create_event(MKNOD_EVENT);
@@ -217,14 +220,17 @@ fmon_rename(struct inode *i_1, struct dentry *d_1, struct inode *i_2, struct den
 {
 	struct event *e;
 	int retval = -1;
-	char *path_d1;
-	char *path_d2;
-	
+	char *path_d1 = NULL;
+	char *path_d2 = NULL;
+
 	if (fmon->linux_rename) {
-		path_d1 = dentry_full_path(d_1);
-		path_d2 = dentry_full_path(d_2);
+		if (is_active) {
+			path_d1 = dentry_full_path(d_1);
+			path_d2 = dentry_full_path(d_2);
+		}
+
 		retval = fmon->linux_rename(i_1, d_1, i_2, d_2);
-		if (!retval) {
+		if (!retval && is_active) {
 			if (path_d1 && path_d2) {
 				e = create_event(RENAME_EVENT);
 
@@ -238,7 +244,7 @@ fmon_rename(struct inode *i_1, struct dentry *d_1, struct inode *i_2, struct den
 			}
 		}
 	}
-	
+
 	return retval;
 }
 

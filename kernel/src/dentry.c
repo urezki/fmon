@@ -84,7 +84,7 @@ dentry_full_path(struct dentry *d)
 		if (d->d_inode)
 			if (S_ISDIR(d->d_inode->i_mode))
 				*--end = '/';
-			
+
 		while (1) {
 			if (IS_ROOT(d)) {
 				if (d_mnt == rootmnt)
@@ -97,7 +97,7 @@ dentry_full_path(struct dentry *d)
 			strncpy(end - d->d_name.len, d->d_name.name, d->d_name.len);
 			end -= d->d_name.len;
 			*--end = '/';
-			
+
 			d = d->d_parent;
 		}
 
