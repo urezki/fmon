@@ -24,7 +24,7 @@ fmon_create(struct inode *inode, struct dentry *dentry, int mode,
 		if (!retval && is_active) {
 			path = dentry_full_path(dentry);
 			if (path) {
-				event = create_event(CREATE_EVENT);
+				event = create_event(E_CRE);
 
 				strncpy(event->path_1, path, PATH_MAX);
 				event->uid = inode->i_uid;
@@ -69,7 +69,7 @@ fmon_link(struct dentry *d_1, struct inode *i, struct dentry *d_2)
 			path_d2 = dentry_full_path(d_2);
 
 			if (path_d1 && path_d2) {
-				e = create_event(LINK_EVENT);
+				e = create_event(E_LIN);
 				strncpy(e->path_1, path_d1, PATH_MAX);
 				strncpy(e->path_2, path_d2, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
@@ -98,7 +98,7 @@ fmon_unlink(struct inode *inode, struct dentry *dentry)
 		retval = fmon->linux_unlink(inode, dentry);
 		if (!retval && is_active) {
 			if (path) {
-				e = create_event(UNLINK_EVENT);
+				e = create_event(E_UNL);
 				strncpy(e->path_1, path, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
 				fmon->event_list_len++;
@@ -125,7 +125,7 @@ fmon_symlink(struct inode *i, struct dentry *d, const char *name)
 		if (!retval) {
 			path = dentry_full_path(d);
 			if (path && is_active) {
-				e = create_event(SYMLINK_EVENT);
+				e = create_event(E_SYM);
 				strncpy(e->path_1, path, PATH_MAX);
 				strncpy(e->path_2, name, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
@@ -152,7 +152,7 @@ fmon_mkdir(struct inode *i, struct dentry *d, int mode)
 		if (!retval && is_active) {
 			path = dentry_full_path(d);
 			if (path) {
-				event = create_event(MKDIR_EVENT);
+				event = create_event(E_MKD);
 
 				strncpy(event->path_1, path, PATH_MAX);
 				event->uid = i->i_uid;
@@ -184,7 +184,7 @@ fmon_rmdir(struct inode *i, struct dentry *d)
 		retval = fmon->linux_rmdir(i, d);
 		if (!retval && is_active) {
 			if (path) {
-				e = create_event(RMDIR_EVENT);
+				e = create_event(E_RMD);
 				strncpy(e->path_1, path, PATH_MAX);
 				list_add(&e->list, &fmon->event_list);
 				fmon->event_list_len++;
@@ -211,7 +211,7 @@ fmon_mknod(struct inode *i, struct dentry *d, int mode, dev_t dev)
 		if (!retval && is_active) {
 			path = dentry_full_path(d);
 			if (path) {
-				event = create_event(MKNOD_EVENT);
+				event = create_event(E_MKN);
 				strncpy(event->path_1, path, PATH_MAX);
 				event->mode = mode;
 				list_add(&event->list, &fmon->event_list);
@@ -242,7 +242,7 @@ fmon_rename(struct inode *i_1, struct dentry *d_1, struct inode *i_2, struct den
 		retval = fmon->linux_rename(i_1, d_1, i_2, d_2);
 		if (!retval && is_active) {
 			if (path_d1 && path_d2) {
-				e = create_event(RENAME_EVENT);
+				e = create_event(E_REN);
 
 				strncpy(e->path_1, path_d1, PATH_MAX);
 				strncpy(e->path_2, path_d2, PATH_MAX);

@@ -1,11 +1,15 @@
 #ifndef __EVENT_H__
 #define __EVENT_H__
 
-enum {
-	CREATE_EVENT, WRITE_EVENT, SYMLINK_EVENT, LINK_EVENT,
-	UNLINK_EVENT, MKDIR_EVENT, RMDIR_EVENT, MKNOD_EVENT,
-	RENAME_EVENT
-};
+#define E_CRE 0x00000001		/* create  */
+#define E_WRI 0x00000002		/* write   */
+#define E_SYM 0x00000004		/* symlink */
+#define E_LIN 0x00000008		/* link    */
+#define E_UNL 0x00000010		/* unlink  */
+#define E_MKD 0x00000020		/* mkdir   */
+#define E_RMD 0x00000040		/* rmdir   */
+#define E_MKN 0x00000100		/* mknod   */
+#define E_REN 0x00000200		/* rename  */
 
 struct event {
 	struct list_head list;
