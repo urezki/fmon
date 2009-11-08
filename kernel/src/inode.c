@@ -42,18 +42,6 @@ fmon_create(struct inode *inode, struct dentry *dentry, int mode,
 	return retval;
 }
 
-static struct dentry *
-fmon_lookup(struct inode *inode, struct dentry *dentry,
-			struct nameidata *namei)
-{
-	struct dentry *d = NULL;
-
-	if (fmon->linux_lookup)
-		d = fmon->linux_lookup(inode, dentry, namei);
-	
-	return d;
-}
-
 static int
 fmon_link(struct dentry *d_1, struct inode *i, struct dentry *d_2)
 {
@@ -259,137 +247,6 @@ fmon_rename(struct inode *i_1, struct dentry *d_1, struct inode *i_2, struct den
 	return retval;
 }
 
-static int
-fmon_readlink(struct dentry *d, char __user *data, int mode)
-{
-	int retval = -1;
-
-	if (fmon->linux_readlink)
-		retval = fmon->linux_readlink(d, data, mode);
-	
-	return retval;
-}
-
-static void *
-fmon_follow_link(struct dentry *d, struct nameidata *namei)
-{
-	void *retval = NULL;
-
-	if (fmon->linux_follow_link)
-		retval = fmon->linux_follow_link(d, namei);
-	
-	return retval;
-}
-
-static void
-fmon_put_link(struct dentry *d, struct nameidata *namei, void *data)
-{
-	if (fmon->linux_put_link)
-		fmon->linux_put_link(d, namei, data);
-}
-
-static void
-fmon_truncate(struct inode *i)
-{
-	if (fmon->linux_truncate)
-		fmon->linux_truncate(i);
-}
-
-static int
-fmon_permission(struct inode *i, int mode, struct nameidata *namei)
-{
-	int retval = -1;
-
-	if (fmon->linux_permission)
-		retval = fmon->linux_permission(i, mode, namei);
-
-	return retval;
-}
-
-static int
-fmon_setattr(struct dentry *d, struct iattr *attr)
-{
-	int retval = -1;
-
-	if (fmon->linux_setattr)
-		retval = fmon->linux_setattr(d, attr);
-
-	return retval;
-}
-
-static int
-fmon_getattr(struct vfsmount *mnt, struct dentry *d, struct kstat *k)
-{
-	int retval = -1;
-	
-	if (fmon->linux_getattr)
-		retval = fmon->linux_getattr(mnt, d, k);
-
-	return retval;
-}
-
-static int
-fmon_setxattr(struct dentry *d, const char *name, const void *data, size_t len, int a)
-{
-	int retval = -1;
-
-	if (fmon->linux_setxattr)
-		retval = fmon->linux_setxattr(d, name, data, len, a);
-
-	return retval;
-}
-
-static ssize_t
-fmon_getxattr(struct dentry *d, const char *name, void *data, size_t len)
-{
-	ssize_t retval = -1;
-
-	if (fmon->linux_getxattr)
-		retval = fmon->linux_getxattr(d, name, data, len);
-	
-	return retval;
-}
-
-static ssize_t
-fmon_listxattr(struct dentry *d, char *name, size_t size)
-{
-	ssize_t retval = -1;
-
-	if (fmon->linux_listxattr)
-		retval = fmon->linux_listxattr(d, name, size);
-	
-	return retval;
-}
-
-static int
-fmon_removexattr(struct dentry *d, const char *name)
-{
-	int retval = -1;
-
-	if (fmon->linux_removexattr)
-		retval = fmon->linux_removexattr(d, name);
-	
-	return retval;
-}
-
-static void
-fmon_truncate_range(struct inode *i, loff_t off_1, loff_t off_2)
-{
-	if (fmon->linux_truncate_range)
-		fmon->linux_truncate_range(i, off_1, off_2);
-}
-
-static long
-fmon_fallocate(struct inode *i, int mode, loff_t offset, loff_t len)
-{
-	long retval = -1;
-
-	if (fmon->linux_fallocate)
-		retval = fmon->linux_fallocate(i, mode, offset, len);
-
-	return retval;
-}
-
 int
 assign_inode_op(struct file_monitor *f, struct dentry *s_root)
 {
@@ -406,51 +263,22 @@ assign_inode_op(struct file_monitor *f, struct dentry *s_root)
 		if (iop) {
 			f->linux_create = iop->create;
 			f->linux_unlink = iop->unlink;
-			f->linux_lookup = iop->lookup;
 			f->linux_link = iop->link;
 			f->linux_symlink = iop->symlink;
 			f->linux_mkdir = iop->mkdir;
 			f->linux_rmdir = iop->rmdir;
 			f->linux_mknod = iop->mknod;
 			f->linux_rename = iop->rename;
-			f->linux_readlink = iop->readlink;
-			f->linux_follow_link = iop->follow_link;
-			f->linux_put_link = iop->put_link;
-			f->linux_truncate = iop->truncate;
-			f->linux_permission = iop->permission;
-			f->linux_setattr = iop->setattr;
-			f->linux_getattr = iop->getattr;
-			f->linux_setxattr = iop->setxattr;
-			f->linux_getxattr = iop->getxattr;
-			f->linux_listxattr = iop->listxattr;
-			f->linux_removexattr = iop->removexattr;
-			f->linux_truncate_range = iop->truncate_range;
-			f->linux_fallocate = iop->fallocate;
 
 			/* assign our own functions */
 			iop->create = f->linux_create ? fmon_create : NULL;
 			iop->unlink = f->linux_unlink ? fmon_unlink : NULL;
-			iop->lookup = f->linux_lookup ? fmon_lookup : NULL;
 			iop->link = f->linux_link ? fmon_link : NULL;
 			iop->symlink = f->linux_symlink ? fmon_symlink : NULL;
 			iop->mkdir = f->linux_mkdir ? fmon_mkdir : NULL;
 			iop->rmdir = f->linux_rmdir ? fmon_rmdir : NULL;
 			iop->mknod = f->linux_mknod ? fmon_mknod : NULL;
 			iop->rename = f->linux_rename ? fmon_rename : NULL;
-			iop->readlink = f->linux_readlink ? fmon_readlink : NULL;
-			iop->follow_link = f->linux_follow_link ? fmon_follow_link : NULL;
-			iop->put_link = f->linux_put_link ?  fmon_put_link : NULL;
-			iop->truncate = f->linux_truncate ? fmon_truncate : NULL;
-			iop->permission = f->linux_permission ? fmon_permission : NULL;
-			iop->setattr = f->linux_setattr ? fmon_setattr : NULL;
-			iop->getattr = f->linux_getattr ? fmon_getattr : NULL;
-			iop->setxattr = f->linux_setxattr ? fmon_setxattr : NULL;
-			iop->getxattr = f->linux_getxattr ? fmon_getxattr : NULL;
-			iop->listxattr = f->linux_listxattr ? fmon_listxattr : NULL;
-			iop->removexattr = f->linux_removexattr ? fmon_removexattr : NULL;
-			iop->truncate_range = f->linux_truncate_range ? fmon_truncate_range : NULL;
-			iop->fallocate = f->linux_fallocate ? fmon_fallocate : NULL;
-
 			return 1;
 		}
 	}
@@ -472,29 +300,19 @@ restore_inode_op(struct file_monitor *f)
 	i = f->sb->s_root->d_inode;
 	iop = (struct inode_operations *) i->i_op;
 
-	/* restore */
+	/* restore inode operations */
 	iop->create = f->linux_create;
 	iop->unlink = f->linux_unlink;
-	iop->lookup = f->linux_lookup;
 	iop->link = f->linux_link;
 	iop->symlink = f->linux_symlink;
 	iop->mkdir = f->linux_mkdir;
 	iop->rmdir = f->linux_rmdir;
 	iop->mknod = f->linux_mknod;
 	iop->rename = f->linux_rename;
-	iop->readlink = f->linux_readlink;
-	iop->follow_link = f->linux_follow_link;
-	iop->put_link = f->linux_put_link;
-	iop->truncate = f->linux_truncate;
-	iop->permission = f->linux_permission;
-	iop->setattr = f->linux_setattr;
-	iop->getattr = f->linux_getattr;
-	iop->setxattr = f->linux_setxattr;
-	iop->getxattr = f->linux_getxattr;
-	iop->listxattr = f->linux_listxattr;
-	iop->removexattr = f->linux_removexattr;
-	iop->truncate_range = f->linux_truncate_range;
-	iop->fallocate = f->linux_fallocate;
+
+	/* restore file operations */
+	/* TODO: XXX */
 
 	return 1;
 }
+
