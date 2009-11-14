@@ -4,9 +4,10 @@
 
 MODULE_NAME = fmon
 
-SOURCE_OBJS = src/dentry.o src/inode.o src/main.o src/vfs.o src/device.o src/proc.o
+SOURCE_OBJS = src/dentry.o src/inode.o src/main.o src/vfs.o src/device.o src/proc.o \
+	src/str.o
 SOURCE_HDRS	= include/dentry.h include/inode.h include/main.h include/vfs.h \
-	include/device.h
+	include/device.h include/str.h include/proc.h
 
 EXTRA_CFLAGS = -Wall -g -D__KERNEL__ -DMODULE -DLINUX -I$(src)/include
 

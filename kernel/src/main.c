@@ -32,7 +32,7 @@ fmon_init(void)
 	fmon->event_list_len = 0;
 
 	fmon->sb = find_init_superblock();
-	retval = assign_inode_op(fmon, fmon->sb->s_root);
+	retval = assign_iop_ifop_opr(fmon, fmon->sb);
 	if (retval > 0) {
 		printk(KERN_INFO "assigned !!!\n");
 	}
@@ -46,7 +46,7 @@ fmon_exit(void)
 {
 	unregister_proc_entries();
 	unregister_fmon_dev();
-	restore_inode_op(fmon);
+	restore_iop_ifop_opr(fmon);
 	kfree(fmon);
 }
 

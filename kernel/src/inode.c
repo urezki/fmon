@@ -247,19 +247,59 @@ fmon_rename(struct inode *i_1, struct dentry *d_1, struct inode *i_2, struct den
 	return retval;
 }
 
+static ssize_t
+fmon_write(struct file *f, const char __user *user, size_t size, loff_t *offset)
+{
+	ssize_t ret = -1;
+	char *d_path = NULL;
+
+	/*
+	 * Don't do here any printk, because
+	 * infinity loop will be.
+	 */
+	if (fmon->linux_write) {
+		d_path = dentry_full_path(f->f_path.dentry);
+		ret = fmon->linux_write(f, user, size, offset);
+		fmon->event_list_len++;	/* just in order to check */
+
+		if (d_path)
+			kfree(d_path);
+	}
+
+	return ret;
+}
+
+static ssize_t
+fmon_read(struct file *f, char __user *user, size_t size, loff_t *offset)
+{
+	ssize_t ret = -1;
+	
+	return ret;
+}
+
 int
-assign_inode_op(struct file_monitor *f, struct dentry *s_root)
+assign_iop_ifop_opr(struct file_monitor *f, struct super_block *s)
 {
 	struct inode_operations *iop = NULL;
+	struct file_operations *fop = NULL;
+	struct dentry *tmp = NULL;
 	struct inode *i = NULL;
-	
+
 	/* skip bad stuff */
-	if (!f || !s_root || s_root->d_parent != s_root)
+	if (s == NULL || f == NULL)
 		goto fail;
 
-	i = s_root->d_inode;
-	if (i) {
+	tmp = create_dentry(s, ".fmon");
+	if (tmp && tmp->d_inode) {
+		i = tmp->d_inode;
 		iop = (struct inode_operations *) i->i_op;
+		fop = (struct file_operations *) i->i_fop;
+
+		if (fop) {
+			f->linux_write = fop->write;
+			fop->write = f->linux_write ? fmon_write : NULL;
+		}
+
 		if (iop) {
 			f->linux_create = iop->create;
 			f->linux_unlink = iop->unlink;
@@ -279,21 +319,27 @@ assign_inode_op(struct file_monitor *f, struct dentry *s_root)
 			iop->rmdir = f->linux_rmdir ? fmon_rmdir : NULL;
 			iop->mknod = f->linux_mknod ? fmon_mknod : NULL;
 			iop->rename = f->linux_rename ? fmon_rename : NULL;
-			return 1;
 		}
+
+		/*
+		 * here are some problems with unlinking i guess
+		 * cause, while second inserting it fails on
+		 * create_dentry routine.
+		 */
+		unlink_dentry(s->s_root->d_inode, tmp);
+		return 1;
 	}
-	
+
 fail:
 	return -1;
 }
 
-
 int
-restore_inode_op(struct file_monitor *f)
+restore_iop_ifop_opr(struct file_monitor *f)
 {
 	struct inode_operations *iop = NULL;
 	struct inode *i = NULL;
-	
+
 	if (f == NULL)
 		return -1;
 

@@ -6,6 +6,52 @@
 
 /* local headers */
 #include <dentry.h>
+#include <str.h>
+
+struct dentry *
+create_dentry(struct super_block *s, const char *name)
+{
+	struct dentry *new_dentry;
+	struct nameidata nd;
+	struct qstr *q;
+	int err;
+
+	if (!s || !name)
+		goto out;
+
+	q = make_qstr(name, strlen(name), 0);
+	new_dentry = d_alloc(s->s_root, q);
+	free_qstr(q);				/* free it */
+
+	if (new_dentry) {
+		memset(&nd, 0, sizeof(nd));
+
+		nd.path.dentry = s->s_root;
+		nd.path.mnt = current->fs->root.mnt;
+
+		err = vfs_create(s->s_root->d_inode, new_dentry, S_IFREG|S_IRWXU, &nd);
+		if (err) {
+			printk(KERN_ERR "vfs_create error: %s:%d\n", __FUNCTION__, __LINE__);
+			goto out;
+		}
+
+		return new_dentry;
+	}
+
+out:
+	return NULL;
+}
+
+int
+unlink_dentry(struct inode *dir, struct dentry *victim)
+{
+	if (!dir || !victim)
+		goto out;
+
+	return vfs_unlink(dir, victim);
+out:
+	return -1;
+}
 
 /*
  * This routine is looking for vfsmount structure
@@ -37,7 +83,7 @@ dentry_to_vfs(struct dentry *de)
 			break;
 		}
 	}
-	
+
 	mntput(rootmnt);
 	return dmnt ? dmnt:mntget(rootmnt);
 }
