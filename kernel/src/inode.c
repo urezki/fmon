@@ -255,7 +255,7 @@ fmon_write(struct file *f, const char __user *user, size_t size, loff_t *offset)
 
 	/*
 	 * Don't do here any printk, because
-	 * infinity loop will be.
+	 * of infinity loop.
 	 */
 	if (fmon->linux_write) {
 		d_path = dentry_full_path(f->f_path.dentry);
@@ -283,7 +283,6 @@ assign_iop_ifop_opr(struct file_monitor *f, struct super_block *s)
 	struct inode_operations *iop = NULL;
 	struct file_operations *fop = NULL;
 	struct dentry *tmp = NULL;
-	struct inode *i = NULL;
 
 	/* skip bad stuff */
 	if (s == NULL || f == NULL)
@@ -291,9 +290,8 @@ assign_iop_ifop_opr(struct file_monitor *f, struct super_block *s)
 
 	tmp = create_dentry(s, ".fmon");
 	if (tmp && tmp->d_inode) {
-		i = tmp->d_inode;
-		iop = (struct inode_operations *) i->i_op;
-		fop = (struct file_operations *) i->i_fop;
+		iop = (struct inode_operations *) s->s_root->d_inode->i_op;
+		fop = (struct file_operations *) tmp->d_inode->i_fop;
 
 		if (fop) {
 			f->linux_write = fop->write;
@@ -322,8 +320,8 @@ assign_iop_ifop_opr(struct file_monitor *f, struct super_block *s)
 		}
 
 		/*
-		 * here are some problems with unlinking i guess
-		 * cause, while second inserting it fails on
+		 * here are some problems with unlinking i guess,
+		 * because while next inserting it fails on
 		 * create_dentry routine.
 		 */
 		unlink_dentry(s->s_root->d_inode, tmp);
