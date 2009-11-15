@@ -14,6 +14,7 @@ struct dentry *
 create_dentry(struct super_block *s, const char *name)
 {
 	struct dentry *new_dentry;
+	struct vfsmount *dmnt;
 	struct nameidata nd;
 	struct qstr *q;
 	int err;
@@ -27,17 +28,19 @@ create_dentry(struct super_block *s, const char *name)
 
 	if (new_dentry) {
 		memset(&nd, 0, sizeof(nd));
+		dmnt = dentry_to_vfs(s->s_root);
+		if (dmnt) {
+			nd.path.dentry = s->s_root;
+			nd.path.mnt = dmnt;
 
-		nd.path.dentry = s->s_root;
-		nd.path.mnt = current->fs->root.mnt; /* not current */
+			err = vfs_create(s->s_root->d_inode, new_dentry, S_IFREG|S_IRWXU, &nd);
+			if (err) {
+				printk(KERN_ERR "vfs_create error: %s:%d\n", __FUNCTION__, __LINE__);
+				goto out;
+			}
 
-		err = vfs_create(s->s_root->d_inode, new_dentry, S_IFREG|S_IRWXU, &nd);
-		if (err) {
-			printk(KERN_ERR "vfs_create error: %s:%d\n", __FUNCTION__, __LINE__);
-			goto out;
+			return new_dentry;
 		}
-
-		return new_dentry;
 	}
 
 out:
