@@ -2,6 +2,7 @@
 #include <linux/sched.h>
 #include <linux/mount.h>
 #include <linux/string.h>
+#include <linux/fs_struct.h>
 
 struct super_block*
 vfsmount_mnt_sb(struct vfsmount *v)

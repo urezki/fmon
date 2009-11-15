@@ -269,14 +269,6 @@ fmon_write(struct file *f, const char __user *user, size_t size, loff_t *offset)
 	return ret;
 }
 
-static ssize_t
-fmon_read(struct file *f, char __user *user, size_t size, loff_t *offset)
-{
-	ssize_t ret = -1;
-	
-	return ret;
-}
-
 int
 assign_iop_ifop_opr(struct file_monitor *f, struct super_block *s)
 {

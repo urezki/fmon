@@ -3,6 +3,8 @@
 #include <linux/mount.h>
 #include <linux/string.h>
 #include <linux/version.h>
+#include <linux/namei.h>
+#include <linux/fs_struct.h>
 
 /* local headers */
 #include <dentry.h>
@@ -27,7 +29,7 @@ create_dentry(struct super_block *s, const char *name)
 		memset(&nd, 0, sizeof(nd));
 
 		nd.path.dentry = s->s_root;
-		nd.path.mnt = current->fs->root.mnt;
+		nd.path.mnt = current->fs->root.mnt; /* not current */
 
 		err = vfs_create(s->s_root->d_inode, new_dentry, S_IFREG|S_IRWXU, &nd);
 		if (err) {

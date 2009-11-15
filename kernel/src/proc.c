@@ -1,6 +1,7 @@
 #include <linux/proc_fs.h>
 #include <linux/module.h>
 #include <asm/uaccess.h>
+#include <linux/version.h>
 
 /* locals */
 #include <proc.h>
@@ -68,14 +69,18 @@ int register_proc_entries(void)
 	if (entry) {
 		entry->read_proc = state_read;
 		entry->write_proc = state_write;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 		entry->owner = THIS_MODULE;
+#endif
 	}
 
 	entry = create_proc_entry("event_queue_len", 0644, root_folder);
 	if (entry) {
 		entry->read_proc = event_queue_len_read;
 		entry->write_proc = event_queue_len_write;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)
 		entry->owner = THIS_MODULE;
+#endif
 	}
 
 	return 0;

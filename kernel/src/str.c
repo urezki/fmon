@@ -1,6 +1,8 @@
-#include <linux/fs.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
 #include <linux/string.h>
 #include <linux/dcache.h>
+#include <linux/fs.h>
 
 /* locals */
 #include <str.h>

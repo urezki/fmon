@@ -17,7 +17,6 @@ struct file_monitor {
 
 	/* file operations */
 	ssize_t (*linux_write)(struct file *, const char __user *, size_t, loff_t *);
-	ssize_t (*linux_read)(struct file *, char __user *, size_t, loff_t *);
 
 	struct list_head event_list; /* all events */
 	unsigned int event_list_len;
